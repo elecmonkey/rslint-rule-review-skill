@@ -39,8 +39,11 @@ Never skip SHA matching, worktree state, path-boundary, or existing-directory ch
 
 ## Choose a Working Directory
 
-- When the user provides a worktree, first confirm that `HEAD` matches the target revision and inspect `git status --short`. Do not pull, reset, or align it to a force-pushed head without authorization.
-- When the user does not provide a worktree, create an isolated one directly. Prefer a detached checkout at the exact SHA so read-only review does not create a local branch.
+- When the user provides a local worktree, or an existing review worktree is clearly discoverable through `git worktree list --porcelain`, prefer reusing it rather than creating another copy.
+- Before reviewing a reused worktree, read the current PR head SHA from the hosting platform, fetch that head, compare it with the worktree `HEAD`, and inspect `git status --short`. Review only an exact match for the current PR head.
+- If a dedicated, clean review worktree is behind the current PR head and can be updated through a non-destructive fast-forward, update it and verify the resulting `HEAD` exactly matches the fetched PR head.
+- If the existing worktree is dirty, is not clearly dedicated to the target review, or cannot fast-forward because the PR was force-pushed or histories diverged, do not overwrite, reset, or clean it. Preserve it and create a separate isolated worktree at the exact current PR head.
+- When no suitable existing worktree is available, create an isolated one directly. Prefer a detached checkout at the exact SHA so read-only review does not create a local branch.
 - Derive the worktree path from parameters or repository location. Do not assume a home directory, fixed parent directory, drive, or path separator.
 - Do not reuse a directory with uncommitted changes, mismatched revision, or unknown provenance.
 
