@@ -67,6 +67,7 @@ Independently inspect the diff and adjacent call sites for:
 - nil values, boundaries, error paths, state lifetimes, caches, concurrency, and resource release;
 - AST-range, scope, and type-information assumptions against Rslint's actual model;
 - options/schema, rule registration, presets, configuration loading, and documentation wiring;
+- `rslint-schema.json` is not a per-rule catalog and does not need an update for an ordinary rule port. Its generic rule-ID patterns and `RuleValue` accept registered rule configuration; do not request or flag a schema update merely because a rule was added. Review or update it only when the PR changes top-level configuration structure, language options, or shared configuration-validation semantics;
 - safe and stable fixes/suggestions with no destructive overlap that converge over multiple rounds;
 - shared-helper or framework changes with demonstrable impact on other rules;
 - unnecessary full-tree scans, repeated parsing, allocations, or type queries on hot paths;
