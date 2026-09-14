@@ -33,7 +33,7 @@ Use equivalent available capabilities when an optional tool is unavailable. If a
 2. Determine whether failure occurred during preview, validation, or after a write. Use read-only commands to check whether fetches, directories, or worktrees already exist; never assume that failure means no side effect occurred.
 3. Use available Git, hosting-platform CLI, and filesystem operations to reproduce the script effect step by step. Preserve equal or stronger overwrite refusal, exact-revision, and cleanliness checks at every step.
 4. Verify the postconditions that the script would have guaranteed, then continue with submodule setup, dependencies, builds, and review.
-5. If an optimization path is unavailable, use the standard Git workflow to get a correct result. For example, when submodule object reuse fails, run the repository-standard submodule initialization instead of stopping review.
+5. If an optimization path is unavailable, use the standard Git workflow to get a correct result. For example, when submodule object reuse fails, shallow-fetch or shallow-clone only the exact gitlink commit instead of stopping review.
 
 Never skip SHA matching, worktree state, path-boundary, or existing-directory checks merely to simulate success. Report an environment blocker only when the equivalent manual workflow also cannot complete because permissions, objects, or tools are genuinely missing.
 
@@ -78,13 +78,15 @@ If the script failed after `fetch`, a changed `FETCH_HEAD` is an allowed local s
 
 When a submodule object database is large, you may reuse objects already present in an initialized checkout. This is an optimization, not a correctness prerequisite. Do not guess the location of a “main worktree.”
 
+For a review worktree, only the exact commit recorded by the superproject gitlink is required. Prefer a shallow clone or shallow fetch at depth 1 for that exact commit. Do not default to, recommend, or silently fall back to a full-history submodule clone.
+
 The helper script requires explicit review-worktree, source-checkout, and relative submodule paths:
 
 ```text
 node scripts/reuse-submodule-worktree.mjs --review-worktree <path> --source-checkout <path> --submodule typescript-go
 ```
 
-It previews by default. After independently checking paths and commits, add `--apply`; do not ask the user again. The script validates the gitlink commit, source object, target state, and worktree cleanliness. If the exact commit is absent from the source object database, fall back to the repository-standard submodule initialization flow.
+It previews by default. After independently checking paths and commits, add `--apply`; do not ask the user again. The script validates the gitlink commit, source object, target state, and worktree cleanliness. If the exact commit is absent from the source object database, initialize the target with a depth-1 checkout of that exact gitlink commit.
 
 Do not create a shared worktree concurrently while a normal clone/fetch writes the same object database. Before cleaning a superproject worktree, remove its nested worktree through the source submodule repository.
 
@@ -97,7 +99,9 @@ If the script fails, read `reuse-submodule-worktree.mjs` and manually reproduce 
 5. From the source checkout, run an equivalent `git worktree add --detach <target> <SHA>`.
 6. Verify target HEAD, target cleanliness, and superproject cleanliness.
 
-If the object is unavailable, the shared object database does not support worktrees, or the reuse path is unsafe, do not stop review. Fall back to the repository-standard submodule command, normally `git submodule update --init --checkout <submodule-path>`, then verify that checkout HEAD matches the gitlink SHA. If the script might already have created a nested worktree, inspect `git worktree list --porcelain` in the source repository and inspect target state before creating another or removing anything.
+If the object is unavailable, the shared object database does not support worktrees, or the reuse path is unsafe, do not stop review. Initialize only the required commit with a shallow command such as `git submodule update --init --checkout --depth 1 <submodule-path>`, then verify that checkout HEAD matches the gitlink SHA. If the target already has a partial submodule checkout, shallow-fetch the exact SHA with `git -C <submodule-path> fetch --depth=1 origin <gitlink-sha>` before detached checkout.
+
+Do not run a full-history clone as the default fallback. If a depth-1 operation cannot obtain the exact gitlink commit, inspect the remote/ref error and try another shallow exact-commit fetch or the repository's supported shallow submodule form. Escalate the specific limitation rather than silently downloading complete history. If the script might already have created a nested worktree, inspect `git worktree list --porcelain` in the source repository and inspect target state before creating another or removing anything.
 
 ## Temporary Files and Dependencies
 
@@ -111,7 +115,7 @@ If the object is unavailable, the shared object database does not support worktr
 
 Complete static reading, upstream-test mapping, and differential corpus preparation before concentrated dynamic verification:
 
-1. Initialize submodules required by the target revision. Prefer safe reuse of existing objects; use the repository-standard initialization command when reuse is unavailable.
+1. Initialize submodules required by the target revision. Prefer safe reuse of existing objects; when reuse is unavailable, shallow-clone or shallow-fetch only the exact gitlink commit at depth 1.
 2. Install workspace dependencies from the lockfile without updating dependencies or the lockfile.
 3. Build the smallest artifact needed by the implementation change once. Before JS integration differential tests exercise changed Go code, follow repository guidance and run `pnpm --filter @rslint/core build:bin`.
 4. Reuse that artifact for the complete differential corpus.

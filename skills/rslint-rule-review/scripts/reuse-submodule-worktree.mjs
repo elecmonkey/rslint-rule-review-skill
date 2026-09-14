@@ -17,15 +17,15 @@ Options:
   -h, --help                Show this help
 
 If this script fails, read it and manually perform the equivalent workflow in
-environment-and-worktrees.md. When object reuse is unavailable, use the
-repository-standard submodule initialization instead; do not stop the review.
+environment-and-worktrees.md. When object reuse is unavailable, shallow-fetch
+only the exact gitlink commit at depth 1; do not stop the review.
 `);
 }
 
 function fail(message) {
   process.stderr.write(`Error: ${message}\n`);
   process.stderr.write(
-    "Read this script, inspect side effects already produced, and manually reproduce the equivalent workflow in references/environment-and-worktrees.md. When object reuse is unavailable, fall back to repository-standard submodule initialization; do not stop the review.\n",
+    "Read this script, inspect side effects already produced, and manually reproduce the equivalent workflow in references/environment-and-worktrees.md. When object reuse is unavailable, shallow-fetch only the exact gitlink commit at depth 1; do not stop the review.\n",
   );
   process.exit(1);
 }
