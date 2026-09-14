@@ -1,0 +1,4 @@
+interface:
+  display_name: "Rslint Rule Port Review"
+  short_description: "Review Rslint rule ports and patch correctness"
+  default_prompt: "Use $rslint-rule-review to review a specified Rslint rule port."
