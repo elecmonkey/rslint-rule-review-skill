@@ -15,13 +15,15 @@ Only conclude that a patch passes once both tracks are complete and no unresolve
 ## Follow Higher-Priority Constraints
 
 - Follow system, user, repository `AGENTS.md`, and runtime permission rules first.
-- A complete rule review normally includes local preparation and dynamic verification: create an isolated worktree, install lockfile-pinned pnpm dependencies, initialize or reuse submodules, use shared Go caches through the environment permission mechanism, and run focused Go build/test, JS tests, and two-sided differential tests. Do not ask the user to approve each ordinary, recoverable local step; request system approval when the environment requires it.
+- A complete rule review normally includes local preparation and dynamic verification: create an isolated worktree, install lockfile-pinned pnpm dependencies, shallow-fetch only each required submodule's exact gitlink commit, use shared Go caches through the environment permission mechanism, and run focused Go build/test, JS tests, and two-sided differential tests. Never use an unbounded submodule clone for review preparation. Do not ask the user to approve each ordinary, recoverable local step; request system approval when the environment requires it.
 - You may create fixtures, temporary tests, and diagnostics in an isolated worktree or temporary directory. You may temporarily edit the reviewed implementation to test a repair hypothesis, then remove your experimental changes. Never overwrite pre-existing changes, commit, push, or modify the author's PR on their behalf.
 - Follow lockfiles and repository commands for dependency installation and builds. Do not modify global toolchains, clear shared caches, or create private Go caches to bypass restrictions.
 - Publishing a comment, submitting a review, pushing, or any other external write requires explicit authorization for the exact target and material action.
 
 ## Read Resources by Task
 
+- Resolve every linked reference and bundled script relative to this `SKILL.md`, not relative to the target repository or the shell's current directory. Record the absolute skill directory before changing directories. Keep the skill directory and the Rslint repository directory as separate variables when they are different checkouts.
+- Read each required reference completely. For long files, read one file at a time or in explicit non-overlapping line ranges, compare the final range with `wc -l`, and continue until EOF. A combined command whose tool output is truncated does not prove that any included file was read in full; reread affected files separately before acting.
 - For every rule-port review, read [upstream-repositories.md](references/upstream-repositories.md), [upstream-parity.md](references/upstream-parity.md), and [patch-correctness.md](references/patch-correctness.md) in full. Before building a behavior matrix or patch-risk map, read [review-patterns.md](references/review-patterns.md) and select counterexample axes relevant to the rule's dependencies and change scope. Read relevant sections of [rslint-runtime-risks.md](references/rslint-runtime-risks.md) for the capabilities the rule uses.
 - Read [environment-and-worktrees.md](references/environment-and-worktrees.md) when creating a worktree, initializing a submodule, building, or running differential tests.
 - `scripts/*.mjs` are convenience tools. If any script fails, read its workflow, inspect side effects it may have produced, and use available environment commands to reproduce its equivalent effect as described in [environment-and-worktrees.md](references/environment-and-worktrees.md). Do not stop the review merely because a helper script failed.
@@ -36,6 +38,8 @@ Only conclude that a patch passes once both tracks are complete and no unresolve
 5. Maintain an intentional-differences list. Accept only specific evidence from the PR body, code, tests, documentation, or an explicit author response. Record Rslint behavior, upstream behavior, and the boundary of each difference. Vague disclaimers and unanswered discussions are not exemptions.
 
 ## Maintain a Review Ledger
+
+Before detailed source review, create a scratch ledger from [review-ledger.md](references/review-ledger.md) in a temporary directory or another untracked location. Fill target identity and upstream identity first, update the tables as evidence is collected, and use its completion gate before choosing the conclusion. Do not add the ledger to the reviewed patch.
 
 Maintain these records during review:
 
